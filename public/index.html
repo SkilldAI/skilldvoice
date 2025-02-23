@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Call GPT - Make a Call</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="tel"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            display: none;
+        }
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .loader {
+            display: none;
+            margin-left: 10px;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .submit-container {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Call Configuration</h1>
+        <div class="form-group">
+            <label for="systemPrompt">System Prompt:</label>
+            <textarea id="systemPrompt" class="form-control" rows="6" style="width: 100%; margin-bottom: 15px;">You are an outbound education consultant helping students find the right university and course for studying abroad. You have a warm and professional personality. Keep your responses engaging yet concise but make every attempt to keep the prospective student interested without being overly pushy.You must not ask more than one question at a time.Do not make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.Guide the student through the decision-making process by asking questions like, "What are your current academic interests and career aspirations?" or "Do you have a preferred study destination in mind?" If they are unsure about their choices, help them explore options by discussing program strengths, university rankings, and scholarship opportunities.Once they show interest in a specific course or university, ask if they would like to schedule a call to discuss the next steps. You must add a '•' symbol every 5 to 10 words at natural pauses where your response can be split for text-to-speech.</textarea>
+        </div>
+        <div class="form-group">
+            <label for="initialMessage">Initial Message:</label>
+            <textarea id="initialMessage" class="form-control" rows="3" style="width: 100%; margin-bottom: 15px;">Hello Ashutosh, this is Priya from GlobalEd Consulting, I wanted to quickly check in about your interest in studying abroad and see how we can help you find the right university and program!</textarea>
+        </div>
+        <form id="callForm">
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" 
+                       placeholder="+1234567890" required>
+            </div>
+            <div class="submit-container">
+                <button type="submit">Make Call</button>
+                <div id="loader" class="loader" style="display: none;"></div>
+            </div>
+        </form>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        document.getElementById('callForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const systemPrompt = document.getElementById('systemPrompt').value;
+            const initialMessage = document.getElementById('initialMessage').value;
+            const status = document.getElementById('status');
+            
+            const button = e.target.querySelector('button');
+            const loader = document.getElementById('loader');
+            
+            // Disable button and show loader
+            button.disabled = true;
+            loader.style.display = 'inline-block';
+            
+            try {
+                const response = await fetch('/make-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        phoneNumber,
+                        systemPrompt,
+                        initialMessage
+                    })
+                });
+                
+                const data = await response.json();
+                
+                status.textContent = data.success 
+                    ? `Call initiated! Call SID: ${data.callSid}`
+                    : data.error;
+                    
+                status.className = data.success ? 'success' : 'error';
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Error making the call. Please try again.';
+                status.className = 'error';
+                status.style.display = 'block';
+            } finally {
+                // Re-enable button and hide loader
+                button.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

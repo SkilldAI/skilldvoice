@@ -1,0 +1,16 @@
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+builds:
+- env:
+    - key: NODE_ENV
+      value: production
+  buildCommand: npm install
+  runCommand: npm run dev
+static_sites:
+- name: frontend
+  environment_slug: node-js
+  github:
+    branch: main
+    deploy_on_push: true
+  source_dir: public
